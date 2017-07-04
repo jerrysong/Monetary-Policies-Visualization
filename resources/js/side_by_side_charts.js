@@ -60,7 +60,7 @@ $(function() {
 
             // Add X values
             dataset.data = Highcharts.map(dataset.data, function (val, j) {
-                return [activity.xData[j], val];
+                return [new Date(activity.xData[j]).getTime(), val];
             });
 
             $('<div class="chart">')
@@ -88,8 +88,9 @@ $(function() {
                         events: {
                             setExtremes: syncExtremes
                         },
+                        type: 'datetime',
                         labels: {
-                            format: '{value} km'
+                          format: '{value:%Y-%b}'
                         }
                     },
                     yAxis: {

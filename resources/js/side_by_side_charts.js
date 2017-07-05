@@ -68,7 +68,8 @@ $(function() {
                     chart: {
                         marginLeft: 40, // Keep all charts left aligned
                         spacingTop: 20,
-                        spacingBottom: 20
+                        spacingBottom: 20,
+                        animation: false
                     },
                     title: {
                         text: dataset.name,

@@ -33,8 +33,8 @@ $(function() {
      */
     Highcharts.Point.prototype.highlight = function (event) {
         this.onMouseOver(); // Show the hover marker
-        this.series.chart.tooltip.refresh(this); // Show the tooltip
-        this.series.chart.xAxis[0].drawCrosshair(event, this); // Show the crosshair
+        //this.series.chart.tooltip.refresh(this); // Show the tooltip
+        //this.series.chart.xAxis[0].drawCrosshair(event, this); // Show the crosshair
     };
 
     /**
@@ -57,15 +57,14 @@ $(function() {
     // Get the data. The contents of the data file can be viewed at
     $.getJSON('resources/data/stock_bond_data.json', function (activity) {
         $.each(activity.datasets, function (i, dataset) {
-
             // Add X values
             dataset.data = Highcharts.map(dataset.data, function (val, j) {
                 return [new Date(activity.xData[j]).getTime(), val];
             });
 
-            $('<div class="chart">')
-                .appendTo('#container')
-                .highcharts({
+            $('<div class="chart" id="' + dataset.chart + '">').appendTo('#container');
+
+            Highcharts.stockChart(dataset.chart, {
                     chart: {
                         marginLeft: 40, // Keep all charts left aligned
                         spacingTop: 20,
@@ -77,21 +76,11 @@ $(function() {
                         margin: 0,
                         x: 30
                     },
-                    credits: {
-                        enabled: false
-                    },
-                    legend: {
-                        enabled: false
-                    },
                     xAxis: {
                         crosshair: true,
                         events: {
                             setExtremes: syncExtremes
                         },
-                        type: 'datetime',
-                        labels: {
-                          format: '{value:%Y-%b}'
-                        }
                     },
                     yAxis: {
                         title: {
@@ -124,7 +113,25 @@ $(function() {
                         tooltip: {
                             valueSuffix: ' ' + dataset.unit
                         }
-                    }]
+                    }],
+                    scrollbar: {
+                        enabled: i == activity.datasets.length - 1 ? true : false
+                    },
+                    navigator: {
+                        enabled: i == activity.datasets.length - 1 ? true : false
+                    },
+                    rangeSelector: {
+                        enabled: i == 0 ? true : false
+                    },
+                    exporting: {
+                        enabled: false
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    legend: {
+                        enabled: false
+                    }
                 });
         });
     });

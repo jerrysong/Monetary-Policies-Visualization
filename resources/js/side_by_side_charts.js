@@ -1,10 +1,9 @@
 $(function() {
-    console.log('ready!');
     /**
      * In order to synchronize tooltips and crosshairs, override the
      * built-in events with handlers defined on the parent element.
      */
-    $('#container').on('mousemove touchmove touchstart', function (e) {
+    $('#charts_container').on('mousemove touchmove touchstart', function (e) {
         var chart,
             point,
             i,
@@ -62,7 +61,7 @@ $(function() {
                 return [new Date(activity.xData[j]).getTime(), val];
             });
 
-            $('<div class="chart" id="' + dataset.chart + '">').appendTo('#container');
+            $('<div class="chart" id="' + dataset.chart + '">').appendTo('#charts_container');
 
             Highcharts.stockChart(dataset.chart, {
                     chart: {
@@ -71,23 +70,27 @@ $(function() {
                         spacingBottom: 20,
                         animation: false
                     },
+
                     title: {
                         text: dataset.name,
                         align: 'left',
                         margin: 0,
                         x: 30
                     },
+
                     xAxis: {
                         crosshair: true,
                         events: {
                             setExtremes: syncExtremes
                         },
                     },
+
                     yAxis: {
                         title: {
                             text: null
                         }
                     },
+
                     tooltip: {
                         positioner: function () {
                             return {
@@ -105,6 +108,7 @@ $(function() {
                         },
                         valueDecimals: dataset.valueDecimals
                     },
+
                     series: [{
                         data: dataset.data,
                         name: dataset.name,
@@ -115,21 +119,27 @@ $(function() {
                             valueSuffix: ' ' + dataset.unit
                         }
                     }],
+
                     scrollbar: {
                         enabled: i == activity.datasets.length - 1 ? true : false
                     },
+
                     navigator: {
                         enabled: i == activity.datasets.length - 1 ? true : false
                     },
+
                     rangeSelector: {
                         enabled: i == 0 ? true : false
                     },
+
                     exporting: {
                         enabled: false
                     },
+
                     credits: {
                         enabled: false
                     },
+
                     legend: {
                         enabled: false
                     }

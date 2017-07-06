@@ -1,4 +1,4 @@
-$(function() {
+function generate_side_by_side_charts() {
     /**
      * In order to synchronize tooltips and crosshairs, override the
      * built-in events with handlers defined on the parent element.
@@ -146,4 +146,4 @@ $(function() {
                 });
         });
     });
-});
+}

@@ -1,4 +1,4 @@
-$(function() {
+function generate_map_chart() {
     $.getJSON('https://www.highcharts.com/samples/data/jsonp.php?filename=us-counties-unemployment.json&callback=?', function (data) {
 
         var countiesMap = Highcharts.geojson(Highcharts.maps['countries/us/us-all-all']),
@@ -109,4 +109,4 @@ $(function() {
         // Instanciate the map
         $('#maps_container').highcharts('Map', options);
     });
-});
+}

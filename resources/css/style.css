@@ -1,15 +1,16 @@
 body {
-  margin-top: 30px;
+    margin-top: 30px;
 }
 
 blockquote {
-    font-size: 1.5em;
+    font-size: 24px;
     text-align: center;
     font-style: italic;
 }
 
-.section {
-  height: 100vh;
+.division {
+    height: 100vh;
+    background-color: #2a2a2b;
 }
 
 .chart {
@@ -19,10 +20,25 @@ blockquote {
     margin: 0 auto;
 }
 
+.sub_title {
+    font-size: 24px;
+    color: white;
+}
+
+.text_content {
+    font-size: 18px;
+    font-style: oblique;
+    color: white;
+}
+
+.highcharts-background {
+    stroke: #2a2a2b;
+}
+
 #intro_container {
-  background: url('../images/fed_reserve.jpg');
-  background-size: cover;
-  background-position: center;
+    background: url('../images/fed_reserve.jpg');
+    background-size: cover;
+    background-position: center;
 }
 
 #title_name {
@@ -34,13 +50,22 @@ blockquote {
 }
 
 #timeline_container {
-  margin-top: 75px;
-  text-align: center;
+    padding-top: 75px;
+    text-align: center;
+}
+
+#charts_text_container {
+    margin-top: 130px;
+    margin-left: 180px;
+}
+
+#charts_container {
+    margin-top: 100px;
 }
 
 #maps_container {
     min-width: 400px;
     max-width: 800px;
     height: 600px;
-    margin: 0 auto;
+    margin-left: 180px;
 }

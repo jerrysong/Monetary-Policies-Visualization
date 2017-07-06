@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="vendors/js/jquery.onepage-scroll.js"></script>
+    <link rel='stylesheet' type='text/css' href='vendors/css/onepage-scroll.css'>
     <!-- highcharts -->
     <script src="https://code.highcharts.com/stock/highstock.js"></script>
     <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
@@ -49,24 +51,64 @@
         </div>
     </nav>
 
-    <div id="intro_container" class='section'>
-        <h1 id='title_name'>Monetary Policy and Its Effects</h1>
-        <blockquote>
-            "Give me control of a nation's money and I care not who makes its laws"
-            <cite>
-                -- Mayer Amschel Bauer Rothschild
-            </cite>
-        </blockquote>
-    </div>
-    <div class='section'>
-        <div id="timeline_container">
-            <img src="resources/images/timeline.png" height="666" width="1156">
-        </div>
-    </div>
-    <div class='section'>
-        <div id="charts_container"></div>
-    </div>
-    <div class='section'>
-        <div id="maps_container"></div>
+    <div class="main">
+        <section class="page1">
+            <div id="intro_container" class='division'>
+                <h1 id='title_name'>Monetary Policy and Its Effects</h1>
+                <blockquote>
+                    "Give me control of a nation's money and I care not who makes its laws"
+                    <br><cite>-- Mayer Amschel Bauer Rothschild</cite>
+                </blockquote>
+            </div>
+        </section>
+        <section class="page2">
+            <div class='division'>
+                <div id="timeline_container">
+                    <img src="resources/images/timeline.png" height="666" width="1156">
+                </div>
+            </div>
+        </section>
+        <section class="page3">
+            <div class='row division'>
+                <div class="col-sm-4">
+                    <div id="charts_text_container">
+                        <h2 class='sub_title'>
+                            How central bank affects stock market
+                        </h2>
+                        <ul class='text_content'>
+                            <li>Directly buying them</li>
+                            <li>Lowering the return on fixed investments, making investors more likely to enter stock market in hopes of finding better returns</li>
+                            <li>Cheaper interest rates lead companies to borrow more money, which in turn they may use to buy back stocks</li>
+                        </ul>
+                        <h2 class='sub_title'>
+                            How central bank affects bond market
+                        </h2>
+                        <ul class='text_content'>
+                            <li>Interest rate changes directly move bond rates</li>
+                            <li>By directly buying billions (or trillions!) of federal government bonds</li>
+                            <li>By making future policy predictions (policy predictions can actually have more effect than policy changes)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="charts_container" class="col-sm-8"></div>
+            </div>
+        </section>
+        <section class="page4">
+            <div class='row division'>
+                <div id="maps_container" class="col-sm-8"></div>
+                <div class="col-sm-4">
+                    <div id="maps_text_container">
+                        <h2 class='sub_title'>
+                            How central bank affects house price
+                        </h2>
+                        <ul class='text_content'>
+                            <li>Lower rates increase mortgage activities, leading to price increases as home buyers can afford larger amounts</li>
+                            <li>Lower rates lead to more housing investors chasing yields</li>
+                            <li>Changing down payment requirements (used recently by People’s Bank of China)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </body>

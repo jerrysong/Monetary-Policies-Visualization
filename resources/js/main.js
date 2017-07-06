@@ -5,4 +5,7 @@ $(function() {
     generate_side_by_side_charts();
     generate_map_chart();
     apply_highchart_theme();
+    $(".main").onepage_scroll({
+        sectionContainer: "section"
+    });
 });

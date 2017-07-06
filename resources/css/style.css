@@ -47,7 +47,7 @@ blockquote {
     font-size: 5em;
     text-align: center;
     font-weight: 700;
-    color: black;
+    color: #000000;
 }
 
 #timeline_container {
@@ -69,7 +69,7 @@ blockquote {
 }
 
 #maps_container {
-    min-width: 400px;
+    min-width: 600px;
     max-width: 800px;
     height: 600px;
     margin-top: 150px;

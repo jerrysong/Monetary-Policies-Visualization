@@ -38,7 +38,8 @@ body, .onepage-wrapper, html {
   padding: 0;
 }
 .onepage-pagination li {
-  padding: 0;
+  padding-top: 5px;
+  padding-right: 20px;
   text-align: center;
 }
 .onepage-pagination li a{
@@ -46,7 +47,6 @@ body, .onepage-wrapper, html {
   width: 4px;
   height: 4px;
   display: block;
-  
 }
 .onepage-pagination li a:before{
   content: '';

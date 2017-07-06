@@ -116,7 +116,7 @@ function generate_side_by_side_charts(dataPath) {
                         color: Highcharts.getOptions().colors[i],
                         fillOpacity: 0.3,
                         tooltip: {
-                            valuePrefix: dataset.unit,
+                            valuePrefix: dataset.unit + ' ',
                         }
                     }],
 

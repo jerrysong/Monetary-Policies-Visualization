@@ -28,7 +28,7 @@ dict_data = {
     "xData": date_list,
     "datasets": [
         {"name": "S&P 500", "chart": "stock_chart", "data": stock_list, "unit": "", "type": "area", "valueDecimals": 0},
-        {"name": "Bond", "chart": "bond_chart", "data": bond_list, "unit": "", "type": "area", "valueDecimals": 2}
+        {"name": "Bond", "chart": "bond_chart", "data": bond_list, "unit": "$", "type": "area", "valueDecimals": 2}
     ]
 }
 

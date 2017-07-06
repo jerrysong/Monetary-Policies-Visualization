@@ -10,7 +10,12 @@ body {
 }
 
 #intro_container {
-  padding: 40px 15px;
+  margin: 40px 15px;
+  text-align: center;
+}
+
+#timeline_container {
+  margin: 40px 15px;
   text-align: center;
 }
 

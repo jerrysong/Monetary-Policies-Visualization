@@ -28,35 +28,45 @@
 
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Central Bank Monetary Policies</a>
+                <a class="navbar-brand" href="#">Monetary Policies</a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Introduction</a></li>
+                    <li><a href="#timeline_container">Major Events Timeline</a></li>
+                    <li><a href="#charts_container">Stock and Bond</a></li>
+                    <li><a href="#maps_container">Real Estate</a></li>
+                </ul>
+            </div>
         </div>
-        <div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Introduction</a></li>
-            <li><a href="#charts_container">Stock and Bond</a></li>
-            <li><a href="#maps_container">Real Estate</a></li>
-          </ul>
-        </div>
-      </div>
     </nav>
 
-    <div class="container">
-      <div id="intro_container" class="container-fluid sections">
-        <h1>W209 Mid Term Demo</h1>
-        <p class="lead">In this project we want to demonstrate how central bank monetary policies influence everyone and everything.</p>
-      </div>
-      <div id="timeline_container" class="container-fluid sections">
-          <img src="resources/images/timeline.png" height="666" width="1156">
-      </div>
-      <div id="charts_container" class="container-fluid sections"></div>
-      <div id="maps_container" class="container-fluid sections"></div>
+    <div id="intro_container" class='section'>
+        <h1 id='title_name'>Monetary Policy and Its Effects</h1>
+        <blockquote>
+            "Give me control of a nation's money and I care not who makes its laws"
+            <cite>
+                -- Mayer Amschel Bauer Rothschild
+            </cite>
+        </blockquote>
+    </div>
+    <div class='section'>
+        <div id="timeline_container">
+            <img src="resources/images/timeline.png" height="666" width="1156">
+        </div>
+    </div>
+    <div class='section'>
+        <div id="charts_container"></div>
+    </div>
+    <div class='section'>
+        <div id="maps_container"></div>
     </div>
 </body>

@@ -1,4 +1,4 @@
-function generate_side_by_side_charts() {
+function generate_side_by_side_charts(dataPath) {
     /**
      * In order to synchronize tooltips and crosshairs, override the
      * built-in events with handlers defined on the parent element.
@@ -54,7 +54,7 @@ function generate_side_by_side_charts() {
     }
 
     // Get the data. The contents of the data file can be viewed at
-    $.getJSON('resources/data/stock_bond_data.json', function (activity) {
+    $.getJSON(dataPath, function (activity) {
         $.each(activity.datasets, function (i, dataset) {
             // Add X values
             dataset.data = Highcharts.map(dataset.data, function (val, j) {
@@ -116,7 +116,7 @@ function generate_side_by_side_charts() {
                         color: Highcharts.getOptions().colors[i],
                         fillOpacity: 0.3,
                         tooltip: {
-                            valueSuffix: ' ' + dataset.unit
+                            valuePrefix: dataset.unit,
                         }
                     }],
 

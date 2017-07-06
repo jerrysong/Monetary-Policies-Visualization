@@ -45,26 +45,26 @@ function generate_map_chart(dataPath) {
                 dataClasses: [{
                     from: 0,
                     to: 2,
-                    color: "#F1EEF6"
+                    color: "#7f7fff"
                 }, {
                     from: 2,
                     to: 4,
-                    color: "#D4B9DA"
+                    color: "#6666ff"
                 }, {
                     from: 4,
                     to: 6,
-                    color: "#C994C7"
+                    color: "#4c4cff"
                 }, {
                     from: 6,
                     to: 8,
-                    color: "#DF65B0"
+                    color: "#3232ff"
                 }, {
                     from: 8,
                     to: 10,
-                    color: "#DD1C77"
+                    color: "#1919ff"
                 }, {
                     from: 10,
-                    color: "#980043"
+                    color: "#0000ff"
                 }]
             },
 

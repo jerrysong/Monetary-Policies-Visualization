@@ -17,7 +17,7 @@ function generate_map_chart() {
             },
 
             title: {
-                text: 'U.S. Real Estate Price Growth Rate'
+                text: 'U.S. Average Houses Price Growth Rate'
             },
 
             legend: {

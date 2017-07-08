@@ -1,5 +1,6 @@
 body {
     margin-top: 30px;
+    background-color: #2a2a2b;
 }
 
 blockquote {
@@ -8,9 +9,8 @@ blockquote {
     font-style: italic;
 }
 
-.division {
+.page {
     height: 100vh;
-    background-color: #2a2a2b;
 }
 
 .chart {

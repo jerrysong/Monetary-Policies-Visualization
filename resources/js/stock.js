@@ -293,7 +293,6 @@ var StockVis = function() {
         self.focueCircle = focusRegion.append("g")
             .attr("class", "focus-circle")
             .append("circle")
-
             .attr("opacity", 0);
     };
 
@@ -596,26 +595,13 @@ var StockVis = function() {
                 balance: function interest(d) {
                     return self.balanceYScale.invert(d.y);
                 }
-            }).on('subjectover', function(annotation) {
-                annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", false);
-            }).on('subjectout', function(annotation) {
-                if (!annotation.subject.fixed) {
-                    annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", true);
-                }
-            }).on('subjectclick', function(annotation) {
-                annotation.subject.fixed = !annotation.subject.fixed;
-                if (!annotation.subject.fixed) {
-                    annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", true);
-                } else {
-                    annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", false);
-                }
-            });
+            })
+            .on('subjectclick', toggleAnnotation)
+            .on('noteclick', toggleAnnotation);
 
         self.mainChart.append("g")
             .attr("class", "annotation-region")
             .call(makeAnnotations);
-
-        //self.mainChart.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", true);
     };
 
     function updateStockStreamChart(stackStockData, stockYScale) {
@@ -901,5 +887,14 @@ var StockVis = function() {
     function toggleFilterButton(toggle) {
         toggle.setAttribute("fill", self.currToggleColor === TOGGLE_SET_COLOR ?
             TOGGLE_UNSET_COLOR : TOGGLE_SET_COLOR);
+    };
+
+    function toggleAnnotation(annotation) {
+        annotation.subject.fixed = !annotation.subject.fixed;
+        if (!annotation.subject.fixed) {
+            annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", true);
+        } else {
+            annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", false);
+        }
     };
 };

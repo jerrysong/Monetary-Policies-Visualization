@@ -1,2 +1,3 @@
-# Monetary-Policies-Visualization
-A single page web app to visualize effects of central bank monetary policies
+# W209-Labs
+
+Javascript labs for W209

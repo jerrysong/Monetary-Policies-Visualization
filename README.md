@@ -1,3 +1,1 @@
-# W209-Labs
-
-Javascript labs for W209
+W209 Final Project

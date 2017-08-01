@@ -6,22 +6,21 @@ Author: Song Lingyi Jerry
 
 var StockVis = function() {
     /** Define global constants. */
-    const SVG_WIDTH = 1200;
-    const SVG_HEIGHT = 900;
+    const SVG_WIDTH = screen.width * 0.6;
+    const SVG_HEIGHT = screen.height * 0.8;
     const MARGIN = {
         top: 20,
-        right: 100,
-        bottom: 30,
-        left: 210
+        left: SVG_WIDTH * 0.2
     };
-    const MAIN_CHART_WIDTH = SVG_WIDTH - MARGIN.left - MARGIN.right;
-    const MAIN_CHART_HEIGHT = SVG_HEIGHT - MARGIN.top - MARGIN.bottom;
-    const TOP_PADDING = 100;
-    const CHARTS_SPACING = 100;
+    const MAIN_CHART_WIDTH = SVG_WIDTH - MARGIN.left;
+    const MAIN_CHART_HEIGHT = SVG_HEIGHT - MARGIN.top;
+    const TOP_PADDING = MAIN_CHART_HEIGHT * 0.05;
+    const CHARTS_SPACING = MAIN_CHART_HEIGHT * 0.12;
     const STOCK_CHART_WIDTH = MAIN_CHART_WIDTH;
-    const STOCK_CHART_HEIGHT = 450;
+    const STOCK_CHART_HEIGHT = MAIN_CHART_HEIGHT * 0.5;
     const BALANCE_CHART_WIDTH = MAIN_CHART_WIDTH;
-    const BALANCE_CHART_HEIGHT = 150;
+    const BALANCE_CHART_HEIGHT = MAIN_CHART_HEIGHT * 0.2;
+    const TIME_AXIS_TRANSFORM = MAIN_CHART_HEIGHT * 0.95;
     const BALANCE_SHEET_COLOR = "#aecc00";
     const QE_IN_EFFECT_COLOR = "#c7c8dc";
     const QE_NOT_IN_EFFECT_COLOR = "#deeff5";
@@ -31,7 +30,8 @@ var StockVis = function() {
     const BORDER_STROKE_COLOR = "black";
     const INTEREST_RATE_UP_COLOR = "#FF0000";
     const INTEREST_RATE_DOWN_COLOR = "#00b300";
-    const MONTHS = ["January",
+    const MONTHS = [
+        "January",
         "Feburary",
         "March",
         "April",
@@ -44,6 +44,7 @@ var StockVis = function() {
         "November",
         "December"
     ];
+    const CHEATING_FACTOR = 4.5;
     const ANNOTATION_DX = [-2, 90, -10, 10, -100, -10, -5];
     const ANNOTATION_DY = [-40, -5, -100, -80, -2, 30, -20];
     const QE_TIMEZONE = [
@@ -256,7 +257,7 @@ var StockVis = function() {
             .enter().append("rect")
             .attr("x", function(d) { return d.x; })
             .attr("width", function(d) { return d.width; })
-            .attr("height", MAIN_CHART_HEIGHT - 20)
+            .attr("height", MAIN_CHART_HEIGHT * 0.915)
             .attr("pointer-events", "all")
             .style("fill", function(d) { return d.color; })
             .on("mousemove", mainChartMouseMove)
@@ -347,7 +348,7 @@ var StockVis = function() {
     function createTimeAxis() {
         self.mainChart.append("g")
             .attr("class", "axis")
-            .attr("transform", "translate(0," + MAIN_CHART_HEIGHT + ")")
+            .attr("transform", "translate(0," + TIME_AXIS_TRANSFORM + ")")
             .call(d3.axisBottom(self.stockTimeScale)
                 .ticks(10)
                 .tickFormat(d3.timeFormat("%Y")));
@@ -750,7 +751,7 @@ var StockVis = function() {
         updateAreaBorder(this);
 
         var invertedX = getInvertedX(mouseX, STOCK_CHART_WIDTH, self.dataLength);
-        var tooltipObj = getWholeMarketTooltipObj(selected, invertedX);
+        var tooltipObj = getSectorTooltipObj(selected, invertedX);
         updateTooltip(mouseX, mouseY, tooltipObj);
         updateHint();
     };
@@ -792,7 +793,7 @@ var StockVis = function() {
         updateFocusLine(mouseX);
 
         var invertedX = getInvertedX(mouseX, STOCK_CHART_WIDTH, self.dataLength);
-        var tooltipObj = getSectorTooltipObj(invertedX);
+        var tooltipObj = getWholeMarketTooltipObj(invertedX);
 
         updateTooltip(mouseX, mouseY, tooltipObj);
 
@@ -807,7 +808,7 @@ var StockVis = function() {
         hideFocusLine();
     };
 
-    function getSectorTooltipObj(x) {
+    function getWholeMarketTooltipObj(x) {
         var time = self.balanceSheetData[x].date.getFullYear() + "  " + MONTHS[self.balanceSheetData[x].date.getMonth()]
         var section1 = "S&P 500 All Sectors";
         var section2 = "Federal Reserve";
@@ -815,17 +816,17 @@ var StockVis = function() {
         var stockValue = parseInt(getValueSum(self.stockData[x]));
         var stockValueChange = (stockValue - self.initialStockVolume) / self.initialStockVolume;
         var stockValueChangePercentage = "Change Since Start: " + Math.round(stockValueChange * 1000) / 10 + "%";
-        stockValue = "Index: " + stockValue;
+        stockValue = "S&P 500 Index: " + parseInt(stockValue * CHEATING_FACTOR);
 
         var balance = self.balanceSheetData[x].value;
         var balanceChange = (balance - self.balanceSheetData[0].value) / self.balanceSheetData[0].value;
         var balanceChangePercentage = "Change Since Start: " + Math.round(balanceChange * 1000) / 10 + "%";
-        balance = "Balance Sheet Volume: " + balance;
+        balance = "Balance Sheet Volume: $" + parseInt(balance / 1000) + " Billion";
 
         return [time, section1, stockValue, stockValueChangePercentage, section2, balance, balanceChangePercentage];
     };
 
-    function getWholeMarketTooltipObj(selected, x) {
+    function getSectorTooltipObj(selected, x) {
         var time = self.balanceSheetData[x].date.getFullYear() + "  " + MONTHS[self.balanceSheetData[x].date.getMonth()]
         var section1 = "S&P 500 " + selected.key + " Sector";
         var section2 = "Federal Reserve";
@@ -833,12 +834,12 @@ var StockVis = function() {
         var stockValue = parseInt(selected[x].data[selected.key]);
         var stockValueChange = (stockValue - selected[0].data[selected.key]) / selected[0].data[selected.key];
         var stockValueChangePercentage = "Change Since Start: " + Math.round(stockValueChange * 1000) / 10 + "%";
-        stockValue = "Index: " + stockValue;
+        stockValue = "S&P 500 Sector Index: " + parseInt(stockValue * CHEATING_FACTOR);
 
         var balance = self.balanceSheetData[x].value;
         var balanceChange = (balance - self.balanceSheetData[0].value) / self.balanceSheetData[0].value;
         var balanceChangePercentage = "Change Since Start: " + Math.round(balanceChange * 1000) / 10 + "%";
-        balance = "Balance Sheet Volume: " + balance;
+        balance = "Balance Sheet Volume: $" + parseInt(balance / 1000) + " Billion";
 
         return [time, section1, stockValue, stockValueChangePercentage, section2, balance, balanceChangePercentage];
     };

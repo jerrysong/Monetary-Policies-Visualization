@@ -5,87 +5,23 @@ Author: Song Lingyi Jerry
 "use strict";
 
 var StockVis = function() {
-    /** Define global constants. */
-    const SVG_WIDTH = screen.width * 0.6;
-    const SVG_HEIGHT = screen.height * 0.8;
-    const MARGIN = {
-        top: 20,
-        left: SVG_WIDTH * 0.2
-    };
-    const MAIN_CHART_WIDTH = SVG_WIDTH - MARGIN.left;
-    const MAIN_CHART_HEIGHT = SVG_HEIGHT - MARGIN.top;
-    const TOP_PADDING = MAIN_CHART_HEIGHT * 0.05;
-    const CHARTS_SPACING = MAIN_CHART_HEIGHT * 0.12;
-    const STOCK_CHART_WIDTH = MAIN_CHART_WIDTH;
-    const STOCK_CHART_HEIGHT = MAIN_CHART_HEIGHT * 0.5;
-    const BALANCE_CHART_WIDTH = MAIN_CHART_WIDTH;
-    const BALANCE_CHART_HEIGHT = MAIN_CHART_HEIGHT * 0.2;
-    const TIME_AXIS_TRANSFORM = MAIN_CHART_HEIGHT * 0.95;
-    const BALANCE_SHEET_COLOR = "#aecc00";
-    const QE_IN_EFFECT_COLOR = "#c7c8dc";
-    const QE_NOT_IN_EFFECT_COLOR = "#deeff5";
+    /** Define constants. */
     const TOGGLE_HOVER_COLOR = "#00FFFF";
     const TOGGLE_SET_COLOR = "#b7dce9";
     const TOGGLE_UNSET_COLOR = "white";
     const BORDER_STROKE_COLOR = "black";
-    const INTEREST_RATE_UP_COLOR = "#FF0000";
-    const INTEREST_RATE_DOWN_COLOR = "#00b300";
-    const MONTHS = [
-        "January",
-        "Feburary",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-    ];
-    const CHEATING_FACTOR = 4.5;
-    const ANNOTATION_DX = [-2, 90, -10, 10, -100, -10, -5];
-    const ANNOTATION_DY = [-40, -5, -100, -80, -2, 30, -20];
-    const QE_TIMEZONE = [
-        {
-            date: "1/31/07",
-            inEffect: false
-        },
-        {
-            date: "11/30/08",
-            inEffect: true
-        },
-        {
-            date: "2/28/10",
-            inEffect: false
-        },
-        {
-            date: "11/30/10",
-            inEffect: true
-        },
-        {
-            date: "6/30/11",
-            inEffect: false
-        }
-    ];
-    const parseDate = d3.timeParse("%m/%d/%y");
-    const timeFormat = d3.timeFormat("%d-%b-%y");
+    const STOCK_INDEX_FACTOR = 1;
 
     /** Define class member fields. */
     var self = this;
     self.stockData;
     self.dataLength;
-    self.balanceSheetData;
-    self.interestRateData;
     self.initialStockVolume;
     self.sectors;
     self.baselineSector;
-    self.balanceLayer;
     self.stockColorScale;
-    self.stockTimeScale;
-    self.balanceYScale;
-    self.balanceTimeScale;
+    self.xScale;
+    self.yScale;
     self.activeSectors = new Set();
     self.isMouseActive = true;
     self.currToggleColor;
@@ -94,19 +30,31 @@ var StockVis = function() {
     self.mainChart;
     self.chartBackground;
     self.tooltip;
-    self.focueLine;
-    self.focueCircle;
+    self.focusLine;
+    self.insightBox;
+    self.insightText;
+    self.insightButton;
+    self.qeBoundaryRegion;
+    self.electionRegion;
+    self.fed = new FedVis();
+    self.insightFunctions = [
+        showStockDataInsight,
+        showQEInsight,
+        showElectionInsight,
+    ];
+    self.insightState = 0;
 
     /** The public function to be called in the main js. */
-    self.run = function(stockDataPath, monthlyDataPath) {
-        createSectionContainer();
-        createSVG();
-        createMainChart();
-        createChartBackground();
-        createTooltip();
-        createFocusRegion();
+    self.run = function(stockDataPath, monthlyDataPath, stockContainer) {
+        self.container = d3.select(stockContainer);
+        self.svg = self.container.select("svg");
+        self.mainChart = self.createMainChart(self.svg);
+        self.chartBackground = self.createChartBackground(self.mainChart, self.fed, mainChartMouseMove, mainChartMouseOut);
+        self.tooltip = self.createTooltip(self.container);
+        self.focusLine = self.createFocusRegion(self.svg);
+        self.buildOnFederalReserveData(self, monthlyDataPath, mainChartMouseMove, mainChartMouseOut);
+        self.createInsightBox(self);
         buildOnStockData(stockDataPath);
-        buildOnFederalReserveData(monthlyDataPath);
     };
 
     /** Define private functions. */
@@ -123,30 +71,23 @@ var StockVis = function() {
                 self.baselineSector = self.sectors[0];
                 parseStockData(rawData, self.sectors);
                 self.dataLength = self.stockData.length;
-                self.initialStockVolume = getValueSum(self.stockData[0]);
-                self.stockTimeScale = getTimeScale(self.stockData, STOCK_CHART_WIDTH);
+                self.initialStockVolume = self.getValueSum(self.stockData[0]);
+                self.xScale = self.getTimeScale(self.stockData, self.constants.UPPER_CHART_WIDTH);
                 var stack = d3.stack()
                     .keys(self.sectors);
                 var stackStockData = stack(self.stockData);
                 var stockYScale = getStockYScale(stackStockData);
+                self.yScale = stockYScale;
 
                 createStockStreamChart(stackStockData, stockYScale);
-                createTimeAxis();
                 createStockLegend();
-            });
-    };
+                createQEAnnotationRegion();
 
-    function buildOnFederalReserveData(balanceDataPath) {
-        d3.csv(balanceDataPath,
-            function(error, rawData) {
-                if (error) throw error;
-
-                parseFederalReserveData(rawData);
-                self.balanceYScale = getBalanceYScale(self.balanceSheetData)
-
-                createBalanceStreamChart();
-                createInterestRateAnnotation();
-                createFederalReserveLegend();
+                var eventIndex = 118;
+                var x = self.fed.balanceTimeScale(self.stockData[eventIndex].date) + self.constants.MARGIN.left;
+                var y = self.yScale(self.getValueSum(self.stockData[eventIndex]) - 15);
+                self.createElectionRegion(self, x, y);
+                self.insightFunctions[0]();
             });
     };
 
@@ -154,8 +95,8 @@ var StockVis = function() {
         var output = [];
         var start = 0;
         for (var i = 1; i < input.length; i++) {
-            var currMonth = parseDate(input[i].Date).getMonth(),
-                priorMonth = parseDate(input[i - 1].Date).getMonth();
+            var currMonth = self.constants.parseDate(input[i].Date).getMonth(),
+                priorMonth = self.constants.parseDate(input[i - 1].Date).getMonth();
 
             if (currMonth != priorMonth) {
                 var num = i - start;
@@ -165,7 +106,7 @@ var StockVis = function() {
                         return sum + item[key] / num;
                     }, 0);
                 });
-                obj.date = parseDate(input[i - 1].Date);
+                obj.date = self.constants.parseDate(input[i - 1].Date);
                 obj.date = new Date(obj.date.getFullYear(), obj.date.getMonth() + 1, 0);
                 output.push(obj);
                 start = i;
@@ -179,126 +120,15 @@ var StockVis = function() {
                 return sum + item[key] / num;
             }, 0);
         });
-        obj.date = parseDate(input[input.length - 1].Date);
+        obj.date = self.constants.parseDate(input[input.length - 1].Date);
         obj.date = new Date(obj.date.getFullYear(), obj.date.getMonth() + 1, 0);
         output.push(obj);
 
         self.stockData = output;
     };
 
-    function parseFederalReserveData(input) {
-        self.balanceSheetData = [];
-        self.interestRateData = [];
-        for (var i = 0; i < input.length; i++) {
-            var obj = {
-                date: parseDate(input[i].date),
-                value: +input[i].balance_sheet
-            };
-            self.balanceSheetData.push(obj);
-            if (input[i].category == "'rate'" && input[i].amount != "0") {
-                var obj = {
-                    data: {
-                        date: parseDate(input[i].date),
-                        balance: +input[i].balance_sheet,
-                        interest: +input[i].amount
-                    }
-                };
-                self.interestRateData.push(obj);
-            }
-        }
-    };
-
-    function createSectionContainer() {
-        self.container = d3.select("body")
-            .append("div")
-            .attr("class", "section2-container");
-    };
-
-    function createSVG() {
-        self.svg = self.container.append("svg")
-            .attr("width", SVG_WIDTH)
-            .attr("height", SVG_HEIGHT);
-    };
-
-    function createMainChart() {
-        self.mainChart = self.svg.append("g")
-            .attr("class", "main-chart")
-            .attr("transform", "translate(" + MARGIN.left + "," + MARGIN.top + ")");
-    };
-
-    function createChartBackground() {
-        var regions = [];
-        var startDate = parseDate("1/31/07");
-        var endDate = parseDate("6/30/17");
-        var xscale = d3.scaleTime()
-            .rangeRound([0, MAIN_CHART_WIDTH])
-            .domain([startDate, endDate]);
-
-        for (var i=0; i<QE_TIMEZONE.length-1; i++) {
-            regions.push({
-                color: QE_TIMEZONE[i].inEffect ? QE_IN_EFFECT_COLOR : QE_NOT_IN_EFFECT_COLOR,
-                x: xscale(parseDate(QE_TIMEZONE[i].date)),
-                width: xscale(parseDate(QE_TIMEZONE[i+1].date)) - xscale(parseDate(QE_TIMEZONE[i].date))
-            });
-        }
-
-        var lastIndex = QE_TIMEZONE.length - 1;
-        regions.push({
-            color: QE_TIMEZONE[lastIndex].inEffect ? QE_IN_EFFECT_COLOR : QE_NOT_IN_EFFECT_COLOR,
-            x: xscale(parseDate(QE_TIMEZONE[lastIndex].date)),
-            width: MAIN_CHART_WIDTH - xscale(parseDate(QE_TIMEZONE[lastIndex].date))
-        });
-
-        self.chartBackground = self.mainChart.append("g")
-            .attr("class", "touchable-rect")
-
-        self.chartBackground.selectAll("rect")
-            .data(regions)
-            .enter().append("rect")
-            .attr("x", function(d) { return d.x; })
-            .attr("width", function(d) { return d.width; })
-            .attr("height", MAIN_CHART_HEIGHT * 0.915)
-            .attr("pointer-events", "all")
-            .style("fill", function(d) { return d.color; })
-            .on("mousemove", mainChartMouseMove)
-            .on("mouseout", mainChartMouseOut);
-    };
-
-    function createTooltip() {
-        self.tooltip = self.container
-            .append("div")
-            .attr("class", "tooltip hidden")
-        self.tooltip.append("p")
-            .attr("class", "emphasize");
-        self.tooltip.append("br");
-        self.tooltip.append("p")
-            .attr("class", "emphasize");
-        self.tooltip.append("p");
-        self.tooltip.append("p");
-        self.tooltip.append("br");
-        self.tooltip.append("p")
-            .attr("class", "emphasize");
-        self.tooltip.append("p");
-        self.tooltip.append("p");
-    };
-
-    function createFocusRegion() {
-        var focusRegion = self.svg.append("g")
-            .attr("class", "focus-region");
-
-        self.focueLine = focusRegion.append("g")
-            .attr("class", "focus-line")
-            .append("line")
-            .attr("opacity", 0);
-
-        self.focueCircle = focusRegion.append("g")
-            .attr("class", "focus-circle")
-            .append("circle")
-            .attr("opacity", 0);
-    };
-
     function createStockStreamChart(stackStockData, stockYScale) {
-        var areaMaker = getAreaMaker(self.stockTimeScale, stockYScale);
+        var areaMaker = getAreaMaker(self.xScale, stockYScale);
         var stockLayers = self.mainChart.append("g")
             .attr("class", "stock-layer")
             .selectAll("path")
@@ -316,196 +146,45 @@ var StockVis = function() {
             .on("click", stockStreamAreaClick);
     };
 
-    function createBalanceStreamChart() {
-        self.balanceTimeScale = getTimeScale(self.balanceSheetData, BALANCE_CHART_WIDTH)
-
-        var areaMaker = d3.area()
-            .curve(d3.curveCatmullRom)
-            .x(function(d, i) {
-                return self.balanceTimeScale(d.date);
-            })
-            .y0(function(d) {
-                return self.balanceYScale(0);
-            })
-            .y1(function(d) {
-                return self.balanceYScale(d.value);
-            });
-
-        self.balanceLayer = self.mainChart.append("g")
-            .attr("class", "balance-layer")
-            .append("path")
-            .datum(self.balanceSheetData)
-            .style("fill", function(d) {
-                return BALANCE_SHEET_COLOR;
-            })
-            .attr("d", areaMaker)
-            .attr("opacity", 1)
-            .on("mousemove", mainChartMouseMove)
-            .on("mouseout", mainChartMouseOut)
-            .moveToFront();
-    }
-
-    function createTimeAxis() {
-        self.mainChart.append("g")
-            .attr("class", "axis")
-            .attr("transform", "translate(0," + TIME_AXIS_TRANSFORM + ")")
-            .call(d3.axisBottom(self.stockTimeScale)
-                .ticks(10)
-                .tickFormat(d3.timeFormat("%Y")));
-    };
-
-    function createFederalReserveLegend() {
-        var title = "Federal Reserve";
-        var titleX = 20;
-        var titleY = STOCK_CHART_HEIGHT + 55 + TOP_PADDING;
-        var rectX = 20;
-        var rectY = STOCK_CHART_HEIGHT + 65 + TOP_PADDING;
-        var circleX = rectX + 12;
-        var circleY = rectY + 11;
-        var circleRadius = 10;
-        var textX = 60;
-        var textY = STOCK_CHART_HEIGHT + 75 + TOP_PADDING;
-
-        var legend = self.svg.append("g")
-            .attr("class", "legend")
-            .attr("text-anchor", "start");
-
-        legend.append("g")
-            .append("text")
-            .attr("x", titleX)
-            .attr("y", titleY)
-            .attr("font-size", 15)
-            .attr("font-family", "sans-serif")
-            .attr("font-weight", "bold")
-            .style("fill", "white")
-            .text(title);
-
-        var enter = legend.append("g")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", 13);
-
-        var row1 = enter.append("g")
-            .attr("transform", "translate(0,0)");
-
-        row1.append("rect")
-            .attr("x", rectX)
-            .attr("y", rectY)
-            .attr("width", 24)
-            .attr("height", 24)
-            .attr("fill", BALANCE_SHEET_COLOR);
-
-        row1.append("text")
-            .attr("x", textX)
-            .attr("y", textY)
-            .attr("dy", 7)
-            .style("fill", "white")
-            .text("Balance Sheet Volume");
-
-        var row2 = enter.append("g")
-            .attr("transform", "translate(0,40)");
-
-        row2.append("rect")
-            .attr("x", rectX)
-            .attr("y", rectY)
-            .attr("width", 24)
-            .attr("height", 24)
-            .attr("fill", QE_IN_EFFECT_COLOR);
-
-        row2.append("text")
-            .attr("x", textX)
-            .attr("y", textY)
-            .attr("dy", 7)
-            .style("fill", "white")
-            .text("QE In Effect");
-
-        var row3 = enter.append("g")
-            .attr("transform", "translate(0,80)");
-
-        row3.append("rect")
-            .attr("x", rectX)
-            .attr("y", rectY)
-            .attr("width", 24)
-            .attr("height", 24)
-            .attr("fill", QE_NOT_IN_EFFECT_COLOR);
-
-        row3.append("text")
-            .attr("x", textX)
-            .attr("y", textY)
-            .attr("dy", 7)
-            .style("fill", "white")
-            .text("QE Not In Effect");
-
-        var row4 = enter.append("g")
-            .attr("transform", "translate(0,120)");
-
-        row4.append("circle")
-            .attr("cx", circleX)
-            .attr("cy", circleY)
-            .attr("r", circleRadius)
-            .attr("fill", INTEREST_RATE_UP_COLOR);
-
-        row4.append("text")
-            .attr("x", textX)
-            .attr("y", textY)
-            .attr("dy", 7)
-            .style("fill", "white")
-            .text("Interest Rate Up");
-
-        var row5 = enter.append("g")
-            .attr("transform", "translate(0,160)");
-
-        row5.append("circle")
-            .attr("cx", circleX)
-            .attr("cy", circleY)
-            .attr("r", circleRadius)
-            .attr("fill", INTEREST_RATE_DOWN_COLOR);
-
-        row5.append("text")
-            .attr("x", textX)
-            .attr("y", textY)
-            .attr("dy", 7)
-            .style("fill", "white")
-            .text("Interest Rate Down");
-    };
-
     function createStockLegend() {
         var title = "S&P 500 Sectors";
-        var titleX = 20;
-        var titleY = 10 + MARGIN.top;
-        var rectX = 20;
-        var rectY = 20 + MARGIN.top;
-        var textX = 60;
-        var textY = 30 + MARGIN.top;
+        var titleX = 0;
+        var titleY = 10 + self.constants.MARGIN.top;
+        var rectX = 0;
+        var rectY = 20 + self.constants.MARGIN.top;
+        var textX = 40;
+        var textY = 30 + self.constants.MARGIN.top;
+        var interval = 30;
 
         var legend = self.svg.append("g")
             .attr("class", "legend")
             .attr("text-anchor", "start");
 
         legend.append("g")
+            .attr("class", "title")
             .append("text")
             .attr("x", titleX)
             .attr("y", titleY)
-            .attr("font-size", 15)
-            .attr("font-family", "sans-serif")
-            .attr("font-weight", "bold")
-            .style("fill", "white")
             .text(title);
 
+        if (legend.select(".title").select("text").style("font-size") != "15px") {
+            interval -= 6;
+            textY -= 5;
+        }
+
         var enter = legend.append("g")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", 13)
+            .attr("class", "items")
             .selectAll("g")
             .data(self.sectors.slice().reverse())
             .enter().append("g")
             .attr("transform", function(d, i) {
-                return "translate(0," + i * 40 + ")";
+                return "translate(0," + i * interval + ")";
             });
 
         enter.append("rect")
+            .attr("class", "symbol")
             .attr("x", rectX)
             .attr("y", rectY)
-            .attr("width", 24)
-            .attr("height", 24)
             .attr("fill", self.stockColorScale);
 
         enter.append("text")
@@ -522,11 +201,8 @@ var StockVis = function() {
             .attr("y", rectY)
             .attr("rx", 3)
             .attr("ry", 3)
-            .attr("width", 110)
-            .attr("height", 24)
             .attr("fill", TOGGLE_SET_COLOR)
             .attr("opacity", 1)
-            .style("stroke", "black")
             .style("stroke-width", 0.3)
             .on("mouseover", function() {
                 self.currToggleColor = this.getAttribute("fill");
@@ -561,58 +237,50 @@ var StockVis = function() {
             .moveToBack();
     };
 
-    function createInterestRateAnnotation() {
-        var labels = self.interestRateData.map(function(d, i) {
-            d.note = Object.assign({}, d.note, {
-                title: (d.data.interest >= 0 ? "+" : "") + d.data.interest + "%",
-                label: timeFormat(d.data.date) + " click to toggle",
-                wrap: 100
-            });
-            d.subject = {
-                radius: Math.abs(d.data.interest) * 1.5 + 2,
-                radiusPadding: 5,
-                fixed: true
+    function createQEAnnotationRegion() {
+        var events = [
+            [22, "Oct-2008", "QE 1"],
+            [46, "Oct-2010", "QE 2"],
+            [68, "Aug 2012", "QE 3"]
+        ];
+        var labels = events.map(function(event) {
+            var label = {
+                note: {
+                    lineType: "none",
+                    "align": "middle"
+                },
+                className: "event",
+                type: d3.annotationCalloutCircle,
+                subject: {
+                    radius: 20
+                },
+                data: {},
+                dx: -35,
+                dy: -50
             };
-            d.className = d.data.interest >= 0 ? "up" : "down";
-            d.dx = ANNOTATION_DX[i];
-            d.dy = ANNOTATION_DY[i];
-            return d;
+            label.note.title = event[2];
+            label.note.label = event[1];
+            label.data.x = self.fed.balanceTimeScale(self.stockData[event[0]].date) + self.constants.MARGIN.left;
+            label.data.y = self.yScale(self.getValueSum(self.stockData[event[0]]) - 30);
+            return label;
         });
 
-        var makeAnnotations = d3.annotation()
-            .annotations(labels)
-            .type(d3.annotationCalloutCircle)
-            .accessors({
-                x: function x(d) {
-                    return self.balanceTimeScale(d.date);
-                },
-                y: function y(d) {
-                    return self.balanceYScale(d.balance);
-                }
-            }).accessorsInverse({
-                date: function date(d) {
-                    return timeFormat(self.balanceTimeScale.invert(d.x));
-                },
-                balance: function interest(d) {
-                    return self.balanceYScale.invert(d.y);
-                }
-            })
-            .on('subjectclick', toggleAnnotation)
-            .on('noteclick', toggleAnnotation);
+        var type = self.getEventAnnotationType();
+        var makeAnnotations = self.getEventAnnotationCallback(type, labels);
 
-        self.mainChart.append("g")
-            .attr("class", "annotation-region")
+        self.qeBoundaryRegion = self.svg.append("g")
+            .attr("class", "annotation-region qe-boundary-region hidden")
             .call(makeAnnotations);
-    };
+    }
 
     function updateStockStreamChart(stackStockData, stockYScale) {
-        unobscureAll(self.mainChart.select("stock-layer"));
+        self.unobscureAll(self.mainChart.select("stock-layer"));
         // Disable mouse detection functions until transition is complete.
         self.isMouseActive = false;
         var enterAreaMaker = d3.area()
             .curve(d3.curveCatmullRom)
             .x(function(d, i) {
-                return self.stockTimeScale(d.data.date);
+                return self.xScale(d.data.date);
             })
             .y0(function(d) {
                 return stockYScale(d[1]);
@@ -620,7 +288,7 @@ var StockVis = function() {
             .y1(function(d) {
                 return stockYScale(d[1]);
             });
-        var mergeAreaMaker = getAreaMaker(self.stockTimeScale, stockYScale);
+        var mergeAreaMaker = getAreaMaker(self.xScale, stockYScale);
 
         var update = self.mainChart.select(".stock-layer")
             .selectAll(".stock-area")
@@ -658,39 +326,6 @@ var StockVis = function() {
             .attr("opacity", 1);
     };
 
-    function updateFocusRegion(mouseX) {
-        updateFocusLine(mouseX);
-        updateFocuseCircle(mouseX);
-    };
-
-    function updateFocusLine(mouseX) {
-        var invertedX = getInvertedX(mouseX, STOCK_CHART_WIDTH, self.dataLength);
-        self.focueLine.attr("x1", mouseX + MARGIN.left + 5)
-            .attr("y1", MARGIN.top)
-            .attr("x2", mouseX + MARGIN.left + 5)
-            .attr("y2", MARGIN.top + STOCK_CHART_HEIGHT + BALANCE_CHART_HEIGHT + CHARTS_SPACING + 35 + 100)
-            .attr("opacity", 1);
-    };
-
-    function updateFocuseCircle(mouseX) {
-        var invertedX = getInvertedX(mouseX, STOCK_CHART_WIDTH, self.dataLength);
-        self.focueCircle.attr("cx", mouseX + MARGIN.left + 5)
-            .attr("cy", self.balanceYScale(self.balanceSheetData[invertedX].value) + 20)
-            .attr("r", 4)
-            .attr("opacity", 1);
-    };
-
-    function updateTooltip(x, y, tooltipObj) {
-        self.tooltip.classed("hidden", false)
-            .style("left", x + 250 + "px")
-            .style("top", y - 100 + "px")
-            .selectAll("p")
-            .data(tooltipObj)
-            .text(function(d) {
-                return d
-            });
-    }
-
     function updateAreaBorder(selectedArea) {
         d3.select(selectedArea)
             .classed("hover", true)
@@ -708,28 +343,35 @@ var StockVis = function() {
         }
     };
 
-    function hideFocusLine() {
-        self.focueLine.attr("opacity", 0);
-    };
-
-    function hideFocusCircle() {
-        self.focueCircle.attr("opacity", 0);
-    };
-
-    function hideTooltip() {
-        self.tooltip.classed("hidden", true);
-    };
-
     function hideAreaBorder(selectedArea) {
         d3.select(selectedArea)
             .classed("hover", false)
             .attr("stroke-width", "0px")
     };
 
-    function hideHit() {
+    function hideHint() {
         if ($(".hint")[0]) {
             $(".hint").remove();
         }
+    };
+
+    function showStockDataInsight() {
+        var text = "The Stock data shown is the value of special Exchange-Traded funds for each sector. These funds bundle a variety of stocks from companies in each specific sector, and therefore serve as a good barometer of a sector's performance.";
+        self.electionRegion.classed("hidden", true);
+        self.insightText.html(text);
+    };
+
+    function showQEInsight() {
+        var text = "See how stock period reliably trends upward during much of <a href='https://en.wikipedia.org/wiki/Quantitative_easing'>Quantitative Easing</a>, but that after Quantitative Easing ends the market becomes much choppier and fails to hold much in gain until the next round of Quantitative Easing.";
+        self.qeBoundaryRegion.classed("hidden", false);
+        self.insightText.html(text);
+    };
+
+    function showElectionInsight() {
+        var text = "On Nov 2016, Donald Trump is elected. Stock market panicks for a few hours, then does a 180 and surges on expectations of corporate tax reform and pro-business government.";
+        self.qeBoundaryRegion.classed("hidden", true);
+        self.electionRegion.classed("hidden", false);
+        self.insightText.html(text);
     };
 
     function stockStreamAreaMouseOver(selected, i) {
@@ -738,7 +380,7 @@ var StockVis = function() {
         }
 
         var stockStreamArea = self.mainChart.selectAll(".stock-area");
-        obscureALlExceptByObj(stockStreamArea._groups[0], this, 250, 0.4);
+        self.obscureALlExceptByObj(stockStreamArea.nodes(), this, 250, 0.4);
     };
 
     function stockStreamAreaMouseMove(selected, i) {
@@ -747,12 +389,12 @@ var StockVis = function() {
         }
         var mouseX = d3.mouse(this)[0];
         var mouseY = d3.mouse(this)[1];
-        updateFocusLine(mouseX);
+        self.updateFocusLine(self, mouseX);
         updateAreaBorder(this);
 
-        var invertedX = getInvertedX(mouseX, STOCK_CHART_WIDTH, self.dataLength);
+        var invertedX = self.getInvertedX(mouseX, self.constants.UPPER_CHART_WIDTH, self.dataLength);
         var tooltipObj = getSectorTooltipObj(selected, invertedX);
-        updateTooltip(mouseX, mouseY, tooltipObj);
+        self.updateTooltip(self, mouseX, mouseY, tooltipObj);
         updateHint();
     };
 
@@ -763,12 +405,11 @@ var StockVis = function() {
 
         var stockStreamArea = self.mainChart.select(".stock-layer")
             .selectAll(".stock-area");
-        unobscureAll(stockStreamArea, 250);
+        self.unobscureAll(stockStreamArea, 250);
 
         hideAreaBorder(this);
-        hideTooltip();
-        hideFocusLine();
-        hideFocusCircle();
+        self.hideTooltip(self.tooltip);
+        self.hideFocusLine(self.focusLine);
     };
 
     function stockStreamAreaClick(selected, i) {
@@ -780,6 +421,7 @@ var StockVis = function() {
             var stack = getOrderedStack(self.baselineSector, getActiveSectors(), self.sectors.length);
             var stackStockData = stack(self.stockData);
             var stockYScale = getStockYScale(stackStockData);
+            self.yScale = stockYScale;
             updateStockStreamChart(stackStockData, stockYScale);
         }
     };
@@ -790,76 +432,81 @@ var StockVis = function() {
         }
         var mouseX = d3.mouse(this)[0];
         var mouseY = d3.mouse(this)[1];
-        updateFocusLine(mouseX);
-
-        var invertedX = getInvertedX(mouseX, STOCK_CHART_WIDTH, self.dataLength);
+        var invertedX = self.getInvertedX(mouseX, self.constants.UPPER_CHART_WIDTH, self.dataLength);
         var tooltipObj = getWholeMarketTooltipObj(invertedX);
-
-        updateTooltip(mouseX, mouseY, tooltipObj);
-
-        hideHit();
+        self.mainChartMouseMove(self, mouseX, mouseY, tooltipObj);
+        hideHint();
     };
 
     function mainChartMouseOut(selected, i) {
         if (!self.isMouseActive) {
             return;
         }
-        hideTooltip();
-        hideFocusLine();
+        self.mainChartMouseOut(self);
     };
 
     function getWholeMarketTooltipObj(x) {
-        var time = self.balanceSheetData[x].date.getFullYear() + "  " + MONTHS[self.balanceSheetData[x].date.getMonth()]
+        var time = self.fed.getDateAt(x).getFullYear() + "  " + self.constants.MONTHS[self.fed.getDateAt(x).getMonth()]
         var section1 = "S&P 500 All Sectors";
         var section2 = "Federal Reserve";
 
-        var stockValue = parseInt(getValueSum(self.stockData[x]));
+        var stockValue = parseInt(self.getValueSum(self.stockData[x]));
         var stockValueChange = (stockValue - self.initialStockVolume) / self.initialStockVolume;
         var stockValueChangePercentage = "Change Since Start: " + Math.round(stockValueChange * 1000) / 10 + "%";
-        stockValue = "S&P 500 Index: " + parseInt(stockValue * CHEATING_FACTOR);
+        stockValue = "S&P 500 Index: " + parseInt(stockValue * STOCK_INDEX_FACTOR);
 
-        var balance = self.balanceSheetData[x].value;
-        var balanceChange = (balance - self.balanceSheetData[0].value) / self.balanceSheetData[0].value;
+        var balance = self.fed.getValueAt(x);
+        var balanceChange = (balance - self.fed.getValueAt(0)) / self.fed.getValueAt(0);
         var balanceChangePercentage = "Change Since Start: " + Math.round(balanceChange * 1000) / 10 + "%";
-        balance = "Balance Sheet Volume: $" + parseInt(balance / 1000) + " Billion";
+        balance = "Balance Sheet Volume: $" + (balance / 1000000).toFixed(2) + " Trillion";
+        var qeStatus = "Quantitative Easing: " + self.fed.getQEStatus(self.fed.getDateAt(x));
+        var interestRate = "Interest Rate: " + self.fed.getInterestRate(self.fed.getDateAt(x)) + "%";
 
-        return [time, section1, stockValue, stockValueChangePercentage, section2, balance, balanceChangePercentage];
+        return [time, section1, stockValue, stockValueChangePercentage, section2, balance, balanceChangePercentage, qeStatus, interestRate];
     };
 
     function getSectorTooltipObj(selected, x) {
-        var time = self.balanceSheetData[x].date.getFullYear() + "  " + MONTHS[self.balanceSheetData[x].date.getMonth()]
+        var time = self.fed.getDateAt(x).getFullYear() + "  " + self.constants.MONTHS[self.fed.getDateAt(x).getMonth()]
         var section1 = "S&P 500 " + selected.key + " Sector";
         var section2 = "Federal Reserve";
 
         var stockValue = parseInt(selected[x].data[selected.key]);
         var stockValueChange = (stockValue - selected[0].data[selected.key]) / selected[0].data[selected.key];
         var stockValueChangePercentage = "Change Since Start: " + Math.round(stockValueChange * 1000) / 10 + "%";
-        stockValue = "S&P 500 Sector Index: " + parseInt(stockValue * CHEATING_FACTOR);
+        stockValue = "S&P 500 Sector Index: " + parseInt(stockValue * STOCK_INDEX_FACTOR);
 
-        var balance = self.balanceSheetData[x].value;
-        var balanceChange = (balance - self.balanceSheetData[0].value) / self.balanceSheetData[0].value;
+        var balance = self.fed.getValueAt(x);
+        var balanceChange = (balance - self.fed.getValueAt(0)) / self.fed.getValueAt(0);
         var balanceChangePercentage = "Change Since Start: " + Math.round(balanceChange * 1000) / 10 + "%";
-        balance = "Balance Sheet Volume: $" + parseInt(balance / 1000) + " Billion";
+        balance = "Balance Sheet Volume: $" + (balance / 1000000).toFixed(2) + " Trillion";
+        var qeStatus = "Quantitative Easing: " + self.fed.getQEStatus(self.fed.getDateAt(x));
+        var interestRate = "Interest Rate: " + self.fed.getInterestRate(self.fed.getDateAt(x)) + "%";
 
-        return [time, section1, stockValue, stockValueChangePercentage, section2, balance, balanceChangePercentage];
+        return [time, section1, stockValue, stockValueChangePercentage, section2, balance, balanceChangePercentage, qeStatus, interestRate];
     };
 
     function getActiveSectors() {
         return Array.from(self.activeSectors);
     };
 
-    function getTimeScale(data, width) {
-        var timeScale = d3.scaleTime()
-            .rangeRound([0, width])
-            .domain(d3.extent(data, function(d) {
-                return d.date;
-            }));
-        return timeScale;
+    function getAreaMaker(stockXScale, stockYScale) {
+        var areaMaker = d3.area()
+            .curve(d3.curveCatmullRom)
+            .x(function(d, i) {
+                return stockXScale(d.data.date);
+            })
+            .y0(function(d) {
+                return stockYScale(d[0]);
+            })
+            .y1(function(d) {
+                return stockYScale(d[1]);
+            });
+        return areaMaker;
     };
 
     function getStockYScale(stackStockData) {
         var stockYScale = d3.scaleLinear()
-            .rangeRound([TOP_PADDING + STOCK_CHART_HEIGHT, TOP_PADDING])
+            .rangeRound([self.constants.TOP_PADDING + self.constants.UPPER_CHART_HEIGHT, self.constants.TOP_PADDING])
             .domain([0, d3.max(stackStockData, function(sector) {
                 return d3.max(sector, function(d) {
                     return d[1];
@@ -874,28 +521,37 @@ var StockVis = function() {
         return stockColorScale;
     };
 
-    function getBalanceYScale(data) {
-        var balanceYScale = d3.scaleLinear()
-            .rangeRound([STOCK_CHART_HEIGHT + BALANCE_CHART_HEIGHT + CHARTS_SPACING + TOP_PADDING,
-                STOCK_CHART_HEIGHT + CHARTS_SPACING + TOP_PADDING
-            ])
-            .domain(d3.extent(data, function(d) {
-                return d.value;
-            }));
-        return balanceYScale;
-    }
+    function getOrderedStack(firstKey, activeKeys, length) {
+        var stack = d3.stack()
+            .keys(activeKeys)
+            .order(function(series) {
+                var order = d3.range(series.length);
+                for (var i = 0; i < length; i++) {
+                    if (series[i].key == firstKey) {
+                        var tmp = order[0];
+                        order[0] = i;
+                        order[i] = tmp;
+                        break;
+                    }
+                }
+                return order;
+            });
+        return stack;
+    };
 
     function toggleFilterButton(toggle) {
         toggle.setAttribute("fill", self.currToggleColor === TOGGLE_SET_COLOR ?
             TOGGLE_UNSET_COLOR : TOGGLE_SET_COLOR);
     };
-
-    function toggleAnnotation(annotation) {
-        annotation.subject.fixed = !annotation.subject.fixed;
-        if (!annotation.subject.fixed) {
-            annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", true);
-        } else {
-            annotation.type.a.selectAll("g.annotation-connector, g.annotation-note").classed("hidden", false);
-        }
-    };
 };
+
+/** Inherit shared functions*/
+StockVis.prototype = StokcBondShared;
+StockVis.prototype.getInvertedX = Shared.getInvertedX;
+StockVis.prototype.getValueSum = Shared.getValueSum;
+StockVis.prototype.getTimeScale = Shared.getTimeScale;
+StockVis.prototype.obscureAll = Shared.obscureAll;
+StockVis.prototype.unobscureAll = Shared.unobscureAll;
+StockVis.prototype.obscureALlExceptByObj = Shared.obscureALlExceptByObj;
+StockVis.prototype.hideFocusLine = Shared.hideFocusLine;
+StockVis.prototype.hideTooltip = Shared.hideTooltip;

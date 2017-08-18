@@ -1,0 +1,303 @@
+.axis {
+    stroke-width: 0;
+    fill: transparent;
+}
+
+.hidden {
+    display: none;
+}
+
+.focus-line {
+    stroke: blue;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5
+}
+
+.focus-circle {
+    fill: blue;
+}
+
+.legend text {
+    pointer-events: none;
+    user-select: none;
+    font-weight: bold;
+}
+
+.tooltip {
+    position: absolute;
+    width: 240px;
+    height: auto;
+    padding: 10px;
+    background-color: white;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.tooltip p {
+    margin: 3px;
+}
+
+.tooltip .emphasize {
+    font-size: large;
+    font-weight: bold;
+}
+
+.up.annotation path {
+    stroke: #FF0000;
+    fill: none;
+}
+
+.up.annotation .up.path.connector-arrow, .up.title text, .up.annotation text, .up.annotation.callout.circle .annotation-subject path {
+    fill: #FF0000;
+}
+
+.box-border{
+	border:1px solid black;
+}
+.down.annotation path {
+    stroke: #00b300;
+    fill: none;
+}
+
+.down.annotation .up.path.connector-arrow, .down.title text, .down.annotation text, .down.annotation.callout.circle .annotation-subject path {
+    fill: #00b300;
+}
+
+.annotation-note-bg {
+    fill: rgba(255, 255, 255, 0);
+}
+
+.annotation-note-title {
+    font-size: large;
+    font-weight: bold;
+    user-select: none;
+    pointer-events: none;
+}
+
+.annotation.xythreshold {
+    cursor: move;
+}
+
+.red-text {
+	color: Red;
+}
+
+.blue-text {
+	color: Blue;
+}
+
+.orange-text {
+	color: OrangeRed;
+}
+
+.green-text {
+	color: Green;
+}
+
+.purple-text {
+	color: Purple;
+}
+
+.underline {
+	text-decoration: underline;
+}
+.bold{
+	font-weight: bold;
+}
+
+.opacity25{
+	opacity: 0.25
+}
+
+.opacity50{
+	opacity: 0.50
+}
+
+.heavyweight {
+	text-decoration: underline;
+	font-weight: bold;
+}
+
+
+.section-heading {
+	font-size:24px;
+}
+.sidebar-heading {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333333;
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #bbbbbb;
+}
+
+#indepth_legend{
+	border-style: solid;
+    border-width: 1px;
+}
+
+.axis {
+    stroke-width: 0;
+    fill: transparent;
+}
+
+.hidden {
+    display: none;
+}
+
+.focus-line {
+    stroke: blue;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5
+}
+
+.focus-circle {
+    fill: blue;
+}
+
+.legend text {
+    pointer-events: none;
+    user-select: none;
+    font-weight: bold;
+}
+
+.tooltip {
+    position: absolute;
+    width: 240px;
+    height: auto;
+    padding: 10px;
+    background-color: white;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.tooltip p {
+    margin: 3px;
+}
+
+.tooltip .emphasize {
+    font-size: large;
+    font-weight: bold;
+}
+
+.up.annotation path {
+    stroke: #FF0000;
+    fill: none;
+}
+
+.up.annotation .up.path.connector-arrow, .up.title text, .up.annotation text, .up.annotation.callout.circle .annotation-subject path {
+    fill: #FF0000;
+}
+
+.box-border{
+	border:1px solid black;
+}
+.down.annotation path {
+    stroke: #00b300;
+    fill: none;
+}
+
+.down.annotation .up.path.connector-arrow, .down.title text, .down.annotation text, .down.annotation.callout.circle .annotation-subject path {
+    fill: #00b300;
+}
+
+.annotation-note-bg {
+    fill: rgba(255, 255, 255, 0);
+}
+
+.annotation-note-title {
+    font-size: large;
+    font-weight: bold;
+    user-select: none;
+    pointer-events: none;
+}
+
+.annotation.xythreshold {
+    cursor: move;
+}
+
+.red-text {
+	color: Red;
+}
+
+.blue-text {
+	color: Blue;
+}
+
+.orange-text {
+	color: OrangeRed;
+}
+
+.green-text {
+	color: Green;
+}
+
+.purple-text {
+	color: Purple;
+}
+
+.underline {
+	text-decoration: underline;
+}
+.bold{
+	font-weight: bold;
+}
+
+.opacity25{
+	opacity: 0.25
+}
+
+.opacity50{
+	opacity: 0.50
+}
+
+.heavyweight {
+	text-decoration: underline;
+	font-weight: bold;
+}
+
+
+.section-heading {
+	font-size:24px;
+}
+.sidebar-heading {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333333;
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #bbbbbb;
+}
+
+.adam_takeaway {
+    background-color: rgba(182, 195, 184, 0.2);
+}
+
+.insights-header {
+    font-size: 1.55em;
+    line-height: 1.35em;
+    font-weight: 700;
+    border-bottom: 0.5px solid Black;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.size24 {
+    font-size: 24px;
+}
+
+.size20 {
+    font-size: 20px;
+}
